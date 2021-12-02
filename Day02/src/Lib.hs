@@ -4,22 +4,20 @@ module Lib
     ( someFunc
     ) where
 
-import           Data.List
-
 someFunc :: IO ()
 someFunc = do
         input <- lines <$> readFile "src/input.txt"
-        print $ countPosition input
+        print $ foldl move (0,0,0) $ map words input
 
-countPosition xs = (down - up) * forward
+move oldPosition command =
+  adjustPosition direction value oldPosition
   where
-    down = head result
-    forward = head $ tail result
-    up = head $ tail $ tail result
-    result = yellow xs
+    direction = head command
+    value = (\x -> read x::Int) $ head $ tail command
 
-yellow = map sum . map red . groupBy green . sort . map words
-
-red = map $ (\x -> read x::Int) . head . tail
-
-green a b = head a == head b
+adjustPosition "up" value (horizontal, depth, aim) = (horizontal, depth, aim - value)
+adjustPosition "down" value (horizontal, depth, aim) = (horizontal, depth, aim + value)
+adjustPosition "forward" value (horizontal, depth, aim) = (horizontal', depth', aim)
+  where
+    horizontal' = horizontal + value
+    depth' = depth + (aim * value)
