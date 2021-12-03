@@ -10,38 +10,32 @@ someFunc = do
         input <- lines <$> readFile "src/input.txt"
         print $ calculateAll input
 
-yellow :: String -> [String] -> Int -> String
-yellow predicates [] i = ""
-yellow predicates [x] i = x
-yellow predicates xs i = yellow newPredicates filtered (i+1)
-  where
-    a = predicates !! i
-    green x = (x !! i) == a
-    filtered = filter green xs
-    newPredicates = map mostCommon $ transpose filtered
-yellow2 :: String -> [String] -> Int -> String
-yellow2 predicates [] i = ""
-yellow2 predicates [x] i = x
-yellow2 predicates xs i = yellow2 newPredicates filtered (i+1)
-  where
-    a = predicates !! i
-    green x = (x !! i) == a
-    filtered = filter green xs
-    newPredicates = map flipBit $ map mostCommon $ transpose filtered
-
+calculateAll :: [String] -> Int
 calculateAll xs = toDec oxygen * toDec scrubber
--- calculateOxygen xs = filter (\(x, row) ->head row == x) withMostCommon
   where
-    scrubber = yellow2 epsilon xs 0
-    oxygen = yellow gamma xs 0
-    gamma = map mostCommon $ transpose xs
-    epsilon = map flipBit gamma
+    scrubber = filterMostCommon xs 0
+    oxygen = filterLeastCommon xs 0
 
-flipBit '0' = '1'
-flipBit '1' = '0'
+filterMostCommon :: [String] -> Int -> String
+filterMostCommon = filterByFrequency mostCommon
+filterLeastCommon :: [String] -> Int -> String
+filterLeastCommon = filterByFrequency leastCommon
+
+filterByFrequency _ [] _ = ""
+filterByFrequency _ [x] _ = x
+filterByFrequency frequency xs i = filterByFrequency frequency filtered (i+1)
+  where
+    predicates = map frequency $ transpose xs
+    predicate = predicates !! i
+    selectedPredicate x = (x !! i) == predicate
+    filtered = filter selectedPredicate xs
 
 mostCommon :: Ord a => [a] -> a
-mostCommon = snd . maximum . map (\xs -> (length xs, head xs)) . group . sort
+mostCommon = common maximum
+leastCommon :: Ord a => [a] -> a
+leastCommon = common minimum
+
+common frequency = snd . frequency . map (\xs -> (length xs, head xs)) . group . sort
 
 toDec :: String -> Int
 toDec = foldl' (\acc x -> acc * 2 + digitToInt x) 0
